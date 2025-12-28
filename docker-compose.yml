@@ -1,0 +1,37 @@
+services:
+  vllm:
+    image: vllm/vllm-openai:latest
+    restart: unless-stopped
+    expose:
+      - "5555:8000"
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}
+    command: >
+      --host 0.0.0.0 --port 8000
+      --model mistralai/Mistral-Small-3.1-24B-Instruct-2503
+      --api-key local-dev
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    volumes:
+      - openwebui-data:/app/backend/data
+    environment:
+      - OPENAI_API_BASE_URL=http://vllm:8000/v1
+      - OPENAI_API_KEY=local-dev
+
+      - ENABLE_SIGNUP=true
+      - ENABLE_LOGIN_FORM=true
+
+volumes:
+  openwebui-data:
+  hf-cache:
