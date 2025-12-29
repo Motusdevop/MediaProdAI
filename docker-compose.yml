@@ -34,7 +34,7 @@ services:
       - ENABLE_SIGNUP=true
       - ENABLE_LOGIN_FORM=true
     depends_on:
-      - vllm
+      - vllm_qwen
 
 volumes:
   openwebui-data:
