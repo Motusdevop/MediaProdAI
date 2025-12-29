@@ -1,18 +1,18 @@
 services:
-  vllm_qwen:
-    image: vllm/vllm-openai:latest
-    ports: [ "8000:8000" ]
-    command: >
-      --host 0.0.0.0 --port 8000 --api-key local-dev
-      --model Qwen/Qwen3-0.6B
-    deploy:
-      resources:
-        reservations:
-          devices: [ { capabilities: [ gpu ] } ]
+#  vllm_qwen:
+#    image: vllm/vllm-openai:latest
+#    ports: [ "8000:8000" ]
+#    command: >
+#      --host 0.0.0.0 --port 8000 --api-key local-dev
+#      --model Qwen/Qwen3-0.6B
+#    deploy:
+#      resources:
+#        reservations:
+#          devices: [ { capabilities: [ gpu ] } ]
 
   vllm_mistral:
       image: vllm/vllm-openai:latest
-      ports: [ "8001:8000" ]
+      ports: [ "8000:8000" ]
       command: >
         --host 0.0.0.0 --port 8000 --api-key local-dev
         --model mistralai/Mistral-Small-3.1-24B-Instruct-2503
@@ -34,7 +34,7 @@ services:
       - ENABLE_SIGNUP=true
       - ENABLE_LOGIN_FORM=true
     depends_on:
-      - vllm_qwen
+      - vllm_mistral
 
 volumes:
   openwebui-data:
