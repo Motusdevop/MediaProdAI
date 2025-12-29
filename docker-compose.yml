@@ -9,13 +9,14 @@ services:
       - hf-cache:/root/.cache/huggingface
     environment:
       - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}
-    command: >
-      command: >
-        --host 0.0.0.0 --port 8000
-        --api-key local-dev
-        --model mistralai/Mistral-Small-3.1-24B-Instruct-2503
-        --gpu-memory-utilization 0.6
-        --max-model-len 8192
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+    command:
+      - "--host=0.0.0.0"
+      - "--port=8000"
+      - "--api-key=local-dev"
+      - "--model=mistralai/Mistral-Small-3.1-24B-Instruct-2503"
+      - "--gpu-memory-utilization=0.6"
+      - "--max-model-len=8192"
     ipc: host
     deploy:
       resources:
@@ -32,7 +33,6 @@ services:
     volumes:
       - openwebui-data:/app/backend/data
     environment:
-      # ВАЖНО: имя сервиса vllm_mistral, а не vllm
       - OPENAI_API_BASE_URL=http://vllm_mistral:8000/v1
       - OPENAI_API_KEY=local-dev
       - ENABLE_SIGNUP=true
