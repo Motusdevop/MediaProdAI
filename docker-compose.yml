@@ -1,23 +1,25 @@
 services:
-  vllm:
+  vllm_qwen:
     image: vllm/vllm-openai:latest
-    restart: unless-stopped
-    expose:
-      - "8000"
-    volumes:
-      - hf-cache:/root/.cache/huggingface
-    env_file:
-      - .env
+    ports: [ "8000:8000" ]
     command: >
-      --host 0.0.0.0 --port 8000
-      --api-key local-dev
+      --host 0.0.0.0 --port 8000 --api-key local-dev
       --model Qwen/Qwen3-0.6B
-    ipc: host
     deploy:
       resources:
         reservations:
-          devices:
-            - capabilities: [gpu]
+          devices: [ { capabilities: [ gpu ] } ]
+
+  vllm_mistral:
+      image: vllm/vllm-openai:latest
+      ports: [ "8001:8000" ]
+      command: >
+        --host 0.0.0.0 --port 8000 --api-key local-dev
+        --model mistralai/Mistral-Small-3.1-24B-Instruct-2503
+      deploy:
+        resources:
+          reservations:
+            devices: [ { capabilities: [ gpu ] } ]
 
   openwebui:
     image: ghcr.io/open-webui/open-webui:main
