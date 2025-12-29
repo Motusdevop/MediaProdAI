@@ -9,7 +9,7 @@ services:
       - hf-cache:/root/.cache/huggingface
     environment:
       - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}
-      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      - PYTORCH_ALLOC_CONF=expandable_segments:True
     command:
       - "--host=0.0.0.0"
       - "--port=8000"
