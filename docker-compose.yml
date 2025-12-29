@@ -1,10 +1,10 @@
 services:
-  vllm_mistral:
+  vllm:
     image: vllm/vllm-openai:latest
-    container_name: vllm-mistral
+    container_name: vllm
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     volumes:
       - hf-cache:/root/.cache/huggingface
     environment:
@@ -14,8 +14,8 @@ services:
       - "--host=0.0.0.0"
       - "--port=8000"
       - "--api-key=local-dev"
-      - "--model=mistralai/Mistral-Small-3.1-24B-Instruct-2503"
-      - "--gpu-memory-utilization=0.45"
+      - "--model=Qwen/Qwen2.5-7B-Instruct"
+      - "--gpu-memory-utilization=0.4"
       - "--max-model-len=4096"
       - "--swap-space=16"
     ipc: host
@@ -34,12 +34,12 @@ services:
     volumes:
       - openwebui-data:/app/backend/data
     environment:
-      - OPENAI_API_BASE_URL=http://vllm_mistral:8000/v1
+      - OPENAI_API_BASE_URL=http://vllm:8000/v1
       - OPENAI_API_KEY=local-dev
       - ENABLE_SIGNUP=true
       - ENABLE_LOGIN_FORM=true
     depends_on:
-      - vllm_mistral
+      - vllm
 
 volumes:
   openwebui-data:
