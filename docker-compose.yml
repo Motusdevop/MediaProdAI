@@ -15,8 +15,9 @@ services:
       - "--port=8000"
       - "--api-key=local-dev"
       - "--model=mistralai/Mistral-Small-3.1-24B-Instruct-2503"
-      - "--gpu-memory-utilization=0.6"
-      - "--max-model-len=8192"
+      - "--gpu-memory-utilization=0.45"
+      - "--max-model-len=4096"
+      - "--swap-space=16"
     ipc: host
     deploy:
       resources:
