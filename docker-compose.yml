@@ -1,42 +1,43 @@
 services:
-  vllm_qwen:
+  vllm_mistral:
     image: vllm/vllm-openai:latest
-    ports: [ "8000:8000" ]
+    container_name: vllm-mistral
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    environment:
+      # если есть токен — положи в .env как HF_TOKEN=hf_...
+      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}
     command: >
-      --host 0.0.0.0 --port 8000 --api-key local-dev
-      --model Qwen/Qwen3-0.6B
-      --gpu-memory-utilization 0.1
+      --host 0.0.0.0 --port 8000
+      --api-key local-dev
+      --model mistralai/Mistral-Small-3.1-24B-Instruct-2503
+      --gpu-memory-utilization 0.7
+    ipc: host
     deploy:
       resources:
         reservations:
-          devices: [ { capabilities: [ gpu ] } ]
-
-  vllm_mistral:
-      image: vllm/vllm-openai:latest
-      ports: [ "8001:8000" ]
-      command: >
-        --host 0.0.0.0 --port 8000 --api-key local-dev
-        --model mistralai/Mistral-Small-3.1-24B-Instruct-2503
-        --gpu-memory-utilization 0.7
-      deploy:
-        resources:
-          reservations:
-            devices: [ { capabilities: [ gpu ] } ]
+          devices:
+            - capabilities: [gpu]
 
   openwebui:
     image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
     restart: unless-stopped
     ports:
       - "3000:8080"
     volumes:
       - openwebui-data:/app/backend/data
     environment:
-      - OPENAI_API_BASE_URL=http://vllm:8000/v1
+      # ВАЖНО: имя сервиса vllm_mistral, а не vllm
+      - OPENAI_API_BASE_URL=http://vllm_mistral:8000/v1
       - OPENAI_API_KEY=local-dev
       - ENABLE_SIGNUP=true
       - ENABLE_LOGIN_FORM=true
     depends_on:
-      - vllm_qwen
+      - vllm_mistral
 
 volumes:
   openwebui-data:
