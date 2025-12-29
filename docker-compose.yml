@@ -8,13 +8,14 @@ services:
     volumes:
       - hf-cache:/root/.cache/huggingface
     environment:
-      # если есть токен — положи в .env как HF_TOKEN=hf_...
       - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}
     command: >
-      --host 0.0.0.0 --port 8000
-      --api-key local-dev
-      --model mistralai/Mistral-Small-3.1-24B-Instruct-2503
-      --gpu-memory-utilization 0.7
+      command: >
+        --host 0.0.0.0 --port 8000
+        --api-key local-dev
+        --model mistralai/Mistral-Small-3.1-24B-Instruct-2503
+        --gpu-memory-utilization 0.6
+        --max-model-len 8192
     ipc: host
     deploy:
       resources:
