@@ -1,24 +1,30 @@
 services:
-  vllm:
-    image: vllm/vllm-openai:latest
-    container_name: vllm
+  sglang:
+    image: lmsysorg/sglang:latest-runtime
+    container_name: sglang
     restart: unless-stopped
     expose:
       - "8000"
+    shm_size: "32g"
+    ipc: host
     volumes:
-      - hf-cache:/root/.cache/huggingface
+      - ./models:/models:ro
     environment:
-      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}
+      - TRANSFORMERS_OFFLINE=1
+      - HF_DATASETS_OFFLINE=1
       - PYTORCH_ALLOC_CONF=expandable_segments:True
     command:
-      - "--host=0.0.0.0"
-      - "--port=8000"
-      - "--api-key=local-dev"
-      - "--model=Qwen/Qwen2.5-7B-Instruct"
-      - "--gpu-memory-utilization=0.4"
-      - "--max-model-len=4096"
-      - "--swap-space=16"
-    ipc: host
+      - python3
+      - -m
+      - sglang.launch_server
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --api-key
+      - local-dev
+      - --model-path
+      - /models/Qwen2.5-7B-Instruct
     deploy:
       resources:
         reservations:
@@ -34,13 +40,12 @@ services:
     volumes:
       - openwebui-data:/app/backend/data
     environment:
-      - OPENAI_API_BASE_URL=http://vllm:8000/v1
+      - OPENAI_API_BASE_URL=http://sglang:8000/v1
       - OPENAI_API_KEY=local-dev
       - ENABLE_SIGNUP=true
       - ENABLE_LOGIN_FORM=true
     depends_on:
-      - vllm
+      - sglang
 
 volumes:
   openwebui-data:
-  hf-cache:
