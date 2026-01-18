@@ -1,35 +1,43 @@
 services:
-  sglang:
-    image: lmsysorg/sglang:latest-runtime
-    container_name: sglang
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
     restart: unless-stopped
-    expose:
-      - "8000"
-    shm_size: "32g"
-    ipc: host
+    ports:
+      - "11434:11434"
     volumes:
-      - ./models:/models:ro
+      - ollama:/root/.ollama
     environment:
-      - TRANSFORMERS_OFFLINE=1
-      - HF_DATASETS_OFFLINE=1
-      - PYTORCH_ALLOC_CONF=expandable_segments:True
-    command:
-      - python3
-      - -m
-      - sglang.launch_server
-      - --host
-      - 0.0.0.0
-      - --port
-      - "8000"
-      - --api-key
-      - local-dev
-      - --model-path
-      - /models/Qwen2.5-7B-Instruct
+      # чтобы Open WebUI и другие контейнеры могли достучаться
+      - OLLAMA_HOST=0.0.0.0:11434
+
+      # главное для твоего кейса: сколько модель держать в памяти после запроса
+      # 30s = быстро освобождать VRAM/RAM; можно поставить 0 для "выгружать сразу"
+      - OLLAMA_KEEP_ALIVE=30s
     deploy:
       resources:
         reservations:
           devices:
-            - capabilities: [gpu]
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # опционально: один раз скачать модели в volume, чтобы потом не ждать pull
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: ollama-pull
+    depends_on:
+      - ollama
+    restart: "no"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      # тут OLLAMA_HOST как URL для CLI-клиента
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint: ["sh", "-lc"]
+    command: >
+      ollama pull qwen2.5:14b &&
+      ollama pull qwen2.5:32b-instruct || true
 
   openwebui:
     image: ghcr.io/open-webui/open-webui:main
@@ -40,12 +48,26 @@ services:
     volumes:
       - openwebui-data:/app/backend/data
     environment:
-      - OPENAI_API_BASE_URL=http://sglang:8000/v1
-      - OPENAI_API_KEY=local-dev
+      # Open WebUI <-> Ollama
+      - OLLAMA_BASE_URL=http://ollama:11434
+
+      # если хочешь, чтобы env-переменные не "залипали" в базе после первого старта
+      - ENABLE_PERSISTENT_CONFIG=False
+
+      # твои флаги логина/регистрации
       - ENABLE_SIGNUP=true
       - ENABLE_LOGIN_FORM=true
+
+      # желательно задать секрет (любая длинная строка)
+      - WEBUI_SECRET_KEY=change-me-please
+    extra_hosts:
+      - host.docker.internal:host-gateway
     depends_on:
-      - sglang
+      - ollama
 
 volumes:
+  ollama:
+    name: ollama-models
   openwebui-data:
+
+
